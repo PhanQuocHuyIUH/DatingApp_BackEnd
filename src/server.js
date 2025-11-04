@@ -15,13 +15,26 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Test route
+// Connect DB
+connectDB();
+
+// Routes
 app.get("/", (req, res) => {
   res.json({ message: "Chilling Date API is running!" });
 });
 
-// Connect DB
-connectDB();
+// Auth routes
+app.use("/api/auth", require("./routes/auth.routes"));
+
+// Error handler middleware (optional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: "Something went wrong!",
+    error: err.message,
+  });
+});
 
 // Start server
 const PORT = process.env.PORT || 3000;
