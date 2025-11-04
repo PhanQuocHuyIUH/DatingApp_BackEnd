@@ -1,22 +1,7 @@
-### ✅ PHASE 1: SETUP CƠ BẢN (Foundation)
+### To start server
 
 ```
-1. package.json                            # Dependencies
-2. .env                                    # Environment variables
-3. src/config/database.js                  # MongoDB connection
-4. src/server.js                           # Express server
-5. Test: Server chạy được chưa
-```
-
-### ✅ PHASE 2: AUTHENTICATION (Quan trọng nhất)
-
-```
-6. src/models/User.js                      # User schema
-7. src/utils/jwt.js                        # JWT helpers
-8. src/controllers/auth.controller.js      # Login/Register logic
-9. src/routes/auth.routes.js               # Auth endpoints
-10. src/middleware/auth.middleware.js      # Protect routes
-11. Test: POST /api/auth/register, /api/auth/login
+npm run dev
 ```
 
 ### ✅ PHASE 3: USER PROFILE
