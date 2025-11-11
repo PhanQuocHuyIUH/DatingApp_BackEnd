@@ -208,6 +208,70 @@ const uploadPhoto = async (req, res) => {
   }
 };
 
+// const uploadPhoto = async (req, res) => {
+//   try {
+//     // ✅ Check if files exist (array)
+//     if (!req.files || req.files.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Please upload at least one image",
+//       });
+//     }
+
+//     const user = await User.findById(req.user._id);
+
+//     // Check max photos
+//     const totalPhotos = user.photos.length + req.files.length;
+//     if (totalPhotos > 6) {
+//       // Cleanup temp files
+//       req.files.forEach((file) => cleanupTempFile(file.path));
+
+//       return res.status(400).json({
+//         success: false,
+//         message: `Maximum 6 photos allowed. You have ${user.photos.length} photos, trying to add ${req.files.length} more`,
+//       });
+//     }
+
+//     // Upload all files to Cloudinary
+//     const uploadPromises = req.files.map((file) => uploadImage(file.path));
+//     const uploadResults = await Promise.all(uploadPromises);
+
+//     // Cleanup temp files
+//     req.files.forEach((file) => cleanupTempFile(file.path));
+
+//     // Add photos to user
+//     const isFirstPhoto = user.photos.length === 0;
+//     const newPhotos = uploadResults.map((result, index) => ({
+//       url: result.url,
+//       publicId: result.publicId,
+//       isMain: isFirstPhoto && index === 0, // First photo is main
+//     }));
+
+//     user.photos.push(...newPhotos);
+//     await user.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: `${newPhotos.length} photo(s) uploaded successfully`,
+//       data: {
+//         photos: newPhotos,
+//       },
+//     });
+//   } catch (error) {
+//     // Cleanup temp files if error
+//     if (req.files) {
+//       req.files.forEach((file) => cleanupTempFile(file.path));
+//     }
+
+//     console.error("Upload photos error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to upload photos",
+//       error: error.message,
+//     });
+//   }
+// };
+
 /**
  * @route   DELETE /api/users/me/photos/:photoId
  * @desc    Delete profile photo

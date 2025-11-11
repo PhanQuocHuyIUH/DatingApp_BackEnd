@@ -4,16 +4,6 @@
 npm run dev
 ```
 
-### ✅ PHASE 3: USER PROFILE
-
-```
-12. src/config/cloudinary.js               # Upload config
-13. src/middleware/upload.middleware.js    # Multer
-14. src/controllers/user.controller.js     # Get/Update profile
-15. src/routes/user.routes.js              # User endpoints
-16. Test: GET /api/users/me, PUT /api/users/me
-```
-
 ### ✅ PHASE 4: DISCOVERY (Swipe)
 
 ```

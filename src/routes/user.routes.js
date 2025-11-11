@@ -22,6 +22,7 @@ router.get("/:id", getUserById);
 
 // Photo routes
 router.post("/me/photos", upload.single("photo"), uploadPhoto);
+// router.post("/me/photos", upload.array("photo", 6), uploadPhoto); // Hỗ trợ upload nhiều ảnh cùng lúc
 router.delete("/me/photos/:photoId", deletePhoto);
 router.put("/me/photos/:photoId/main", setMainPhoto);
 

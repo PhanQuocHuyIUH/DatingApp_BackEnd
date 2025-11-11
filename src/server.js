@@ -29,6 +29,9 @@ app.use("/api/auth", require("./routes/auth.routes"));
 // User routes
 app.use("/api/users", require("./routes/user.routes"));
 
+// Discovery routes
+app.use("/api/discovery", require("./routes/discovery.routes"));
+
 // Error handler middleware (optional)
 app.use((err, req, res, next) => {
   console.error(err.stack);
