@@ -419,6 +419,81 @@ const updateLocation = async (req, res) => {
   }
 };
 
+/**
+ * @route   PUT /api/users/me/push-token
+ * @desc    Update push notification token
+ * @access  Private
+ */
+const updatePushToken = async (req, res) => {
+  try {
+    const { pushToken } = req.body;
+
+    if (!pushToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Push token is required",
+      });
+    }
+
+    // Validate Expo push token
+    const { Expo } = require("expo-server-sdk");
+    if (!Expo.isExpoPushToken(pushToken)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Expo push token",
+      });
+    }
+
+    // Update user
+    await User.findByIdAndUpdate(req.user._id, {
+      pushToken,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Push token updated successfully",
+    });
+  } catch (error) {
+    console.error("Update push token error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update push token",
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/users/me/notification-settings
+ * @desc    Update notification settings
+ * @access  Private
+ */
+const updateNotificationSettings = async (req, res) => {
+  try {
+    const { matches, messages, likes } = req.body;
+
+    const settings = {};
+    if (typeof matches === "boolean")
+      settings["notificationSettings.matches"] = matches;
+    if (typeof messages === "boolean")
+      settings["notificationSettings.messages"] = messages;
+    if (typeof likes === "boolean")
+      settings["notificationSettings.likes"] = likes;
+
+    await User.findByIdAndUpdate(req.user._id, settings);
+
+    res.status(200).json({
+      success: true,
+      message: "Notification settings updated",
+    });
+  } catch (error) {
+    console.error("Update notification settings error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update settings",
+    });
+  }
+};
+
 module.exports = {
   getUserById,
   getMyProfile,
@@ -427,4 +502,6 @@ module.exports = {
   deletePhoto,
   setMainPhoto,
   updateLocation,
+  updatePushToken,
+  updateNotificationSettings,
 };

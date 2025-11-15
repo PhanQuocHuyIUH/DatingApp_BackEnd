@@ -6,6 +6,11 @@ const {
   checkMatch,
   getUsersWhoLikedMe,
 } = require("../services/matching.service");
+const {
+  sendMatchNotification,
+  sendLikeNotification,
+  sendSuperLikeNotification,
+} = require("../services/notification.service");
 
 /**
  * @route   GET /api/discovery/profiles
@@ -104,11 +109,34 @@ const swipe = async (req, res) => {
 
     console.log("✅ Swipe created:", swipe._id);
 
-    // Check if it's a match (only for like/superlike)
+    // Check for match and send notifications
     let isMatch = false;
     let matchData = null;
-
+    // Send notification for like/superlike
     if (action === "like" || action === "superlike") {
+      const targetUser = await User.findById(targetUserId);
+
+      // Check if target user has notifications enabled
+      if (targetUser.pushToken && targetUser.notificationSettings?.likes) {
+        try {
+          if (action === "superlike") {
+            await sendSuperLikeNotification(targetUser.pushToken, {
+              id: req.user._id,
+              name: req.user.name,
+            });
+          } else {
+            await sendLikeNotification(targetUser.pushToken, {
+              id: req.user._id,
+              name: req.user.name,
+            });
+          }
+        } catch (notifError) {
+          console.error("❌ Notification send error:", notifError);
+          // Don't fail swipe if notification fails
+        }
+      }
+
+      // Check for match
       console.log("🔍 Checking for match...");
       isMatch = await checkMatch(req.user._id, targetUserId);
       console.log("Match result:", isMatch);
@@ -151,6 +179,30 @@ const swipe = async (req, res) => {
         } catch (matchError) {
           console.error("❌ Match creation error:", matchError);
           // Don't fail the swipe if match creation fails
+        }
+
+        // Send match notification to both users
+        if (targetUser.pushToken && targetUser.notificationSettings?.matches) {
+          try {
+            await sendMatchNotification(targetUser.pushToken, {
+              id: req.user._id,
+              name: req.user.name,
+            });
+          } catch (notifError) {
+            console.error("❌ Match notification error:", notifError);
+          }
+        }
+
+        // Send to current user too
+        if (req.user.pushToken && req.user.notificationSettings?.matches) {
+          try {
+            await sendMatchNotification(req.user.pushToken, {
+              id: targetUser._id,
+              name: targetUser.name,
+            });
+          } catch (notifError) {
+            console.error("❌ Match notification error:", notifError);
+          }
         }
       }
     }

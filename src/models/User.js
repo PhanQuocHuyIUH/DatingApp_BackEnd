@@ -91,6 +91,19 @@ const userSchema = new mongoose.Schema(
     appleId: String,
     facebookId: String,
     googleId: String,
+
+    // Push notification token
+    pushToken: {
+      type: String,
+      default: null,
+    },
+
+    // Notification settings
+    notificationSettings: {
+      matches: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true },
+      likes: { type: Boolean, default: true },
+    },
   },
   {
     timestamps: true,

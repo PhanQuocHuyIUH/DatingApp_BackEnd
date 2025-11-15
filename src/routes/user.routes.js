@@ -8,6 +8,8 @@ const {
   deletePhoto,
   setMainPhoto,
   updateLocation,
+  updatePushToken,
+  updateNotificationSettings,
 } = require("../controllers/user.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { upload } = require("../middleware/upload.middleware");
@@ -28,5 +30,9 @@ router.put("/me/photos/:photoId/main", setMainPhoto);
 
 // Location route
 router.put("/me/location", updateLocation);
+
+// Notification routes
+router.put("/me/push-token", updatePushToken);
+router.put("/me/notification-settings", updateNotificationSettings);
 
 module.exports = router;

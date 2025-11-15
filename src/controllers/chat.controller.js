@@ -2,6 +2,7 @@ const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const Match = require("../models/Match");
 const User = require("../models/User");
+const { sendMessageNotification } = require("../services/notification.service");
 
 /**
  * @route   GET /api/chats
@@ -142,6 +143,11 @@ const getMessages = async (req, res) => {
  * @desc    Send a message
  * @access  Private
  */
+/**
+ * @route   POST /api/chats/:matchId/messages
+ * @desc    Send a message
+ * @access  Private
+ */
 const sendMessage = async (req, res) => {
   try {
     const { matchId } = req.params;
@@ -220,7 +226,44 @@ const sendMessage = async (req, res) => {
     // Populate sender info
     await message.populate("sender", "name photos");
 
-    // Emit socket event (will implement in socket.js)
+    // 🔔 SEND PUSH NOTIFICATION
+    try {
+      // Get receiver user data
+      const receiver = await User.findById(receiverId);
+
+      // Check if receiver has push token and notifications enabled
+      if (receiver && receiver.pushToken && receiver.notificationSettings?.messages) {
+        console.log('📲 Sending push notification to:', receiver.name);
+        
+        // Prepare notification message
+        const notificationBody = type === "text" 
+          ? text.substring(0, 100) // Truncate long messages
+          : `Sent you ${type === 'image' ? 'an' : 'a'} ${type}`;
+
+        // Send notification
+        await sendMessageNotification(
+          receiver.pushToken,
+          {
+            id: req.user._id,
+            name: req.user.name,
+            conversationId: conversation._id
+          },
+          notificationBody
+        );
+
+        console.log('✅ Push notification sent successfully');
+      } else {
+        console.log('⚠️ No push notification sent:', {
+          hasPushToken: !!receiver?.pushToken,
+          notificationsEnabled: receiver?.notificationSettings?.messages
+        });
+      }
+    } catch (notifError) {
+      // Don't fail message sending if notification fails
+      console.error('❌ Push notification error:', notifError.message);
+    }
+
+    // Emit socket event
     const io = req.app.get("io");
     if (io) {
       io.to(receiverId.toString()).emit("new_message", {
