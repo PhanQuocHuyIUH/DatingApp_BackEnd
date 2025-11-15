@@ -1,0 +1,69 @@
+BẢNG THÔNG TIN 20 USERS MẪU
+
+1.  alice.nguyen@gmail.com | Alice Nguyen | Female | Coffee, Travel,
+    Photography, Food, Music
+2.  bob.tran@gmail.com | Bob Tran | Male | Coding, Gym, Hiking, Gaming,
+    Tech
+3.  carol.le@gmail.com | Carol Le | Female | Yoga, Meditation, Cooking,
+    Nature, Animals
+4.  david.pham@gmail.com | David Pham | Male | Design, Surfing,
+    Photography, Art, Beach
+5.  emily.vo@gmail.com | Emily Vo | Female | Fashion, Food, K-pop,
+    Shopping, Social Media
+6.  frank.nguyen@gmail.com | Frank Nguyen | Male | Finance, Chess,
+    Reading, Economics, Strategy Games
+7.  grace.hoang@gmail.com | Grace Hoang | Female | Teaching, Music,
+    Cats, Reading, Languages
+8.  henry.dang@gmail.com | Henry Dang | Male | Photography, Drones,
+    Travel, Adventure, Technology
+9.  iris.lam@gmail.com | Iris Lam | Female | Medicine, Running,
+    Classical Music, Health, Science
+10. jack.truong@gmail.com | Jack Truong | Male | Cooking, Food, Wine,
+    Travel, Dining
+11. kate.do@gmail.com | Kate Do | Female | Dancing, Fitness, Health,
+    Music, Choreography
+12. leo.ngo@gmail.com | Leo Ngo | Male | Architecture, Design, Cycling,
+    Coffee, Art
+13. maria.bui@gmail.com | Maria Bui | Female | Marine Biology, Diving,
+    Conservation, Ocean, Science
+14. nathan.ly@gmail.com | Nathan Ly | Male | Startups, Technology,
+    Innovation, Business, Speaking
+15. olivia.phan@gmail.com | Olivia Phan | Female | Interior Design,
+    Plants, Vintage, Art, Decor
+16. peter.mai@gmail.com | Peter Mai | Male | Coffee, Farming, Nature,
+    Biking, Outdoors
+17. quinn.vu@gmail.com | Quinn Vu | Nonbinary | Art, Poetry, LGBTQ+,
+    Culture, Expression
+18. rachel.tran@gmail.com | Rachel Tran | Female | Journalism, Writing,
+    Podcasts, News, Stories
+19. sam.nguyen@gmail.com | Sam Nguyen | Male | Music, Guitar,
+    Production, Vinyl, Concerts
+20. tina.le@gmail.com | Tina Le | Female | E-commerce, Beauty, Fashion,
+    Dogs, Online Shopping
+
+THÔNG TIN ĐĂNG NHẬP CHUNG 
+Email
+Password: abc12345
+
+PHÂN BỐ THEO THÀNH PHỐ 
+Ho Chi Minh City: 13 
+Hanoi: 4 
+Da Nang: 1 
+Can Tho: 1 
+Nha Trang: 1 
+Da Lat: 1
+
+PHÂN BỐ THEO GIỚI TÍNH 
+Female: 10 
+Male: 9 
+Nonbinary: 1
+
+SỞ THÍCH PHỔ BIẾN NHẤT 
+Art - 5 
+Music - 5 
+Coffee - 4 
+Photography - 4
+Technology - 4 
+Food - 4 
+Travel - 3 
+Design - 3
