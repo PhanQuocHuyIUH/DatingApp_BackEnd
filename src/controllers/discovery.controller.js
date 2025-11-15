@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const Swipe = require("../models/Swipe");
-const Match = require("../models/Match"); // Will create in next phase
+const Match = require("../models/Match");
 const {
   getProfilesToSwipe,
   checkMatch,
@@ -43,6 +43,12 @@ const getProfiles = async (req, res) => {
 const swipe = async (req, res) => {
   try {
     const { targetUserId, action } = req.body;
+
+    console.log("📍 Swipe request:", {
+      userId: req.user._id.toString(),
+      targetUserId,
+      action,
+    });
 
     // Validation
     if (!targetUserId || !action) {
@@ -96,23 +102,62 @@ const swipe = async (req, res) => {
       action,
     });
 
+    console.log("✅ Swipe created:", swipe._id);
+
     // Check if it's a match (only for like/superlike)
     let isMatch = false;
-    let matchId = null;
+    let matchData = null;
 
     if (action === "like" || action === "superlike") {
+      console.log("🔍 Checking for match...");
       isMatch = await checkMatch(req.user._id, targetUserId);
+      console.log("Match result:", isMatch);
 
       if (isMatch) {
-        // Create match record (will implement in next phase)
-        // For now, just return match info
-        matchId = `match_${Date.now()}`;
+        try {
+          console.log("💕 Creating match...");
+
+          // Create match record
+          let match = await Match.createMatch(req.user._id, targetUserId);
+
+          console.log("Match created:", match);
+
+          if (!match) {
+            console.error("❌ Match.createMatch returned null");
+            // Try to find existing match as fallback
+            match = await Match.findMatchBetweenUsers(
+              req.user._id,
+              targetUserId
+            );
+          }
+
+          if (match) {
+            // Populate user data
+            match = await Match.findById(match._id).populate(
+              "users",
+              "name age gender photos bio occupation"
+            );
+
+            console.log("✅ Match populated:", match);
+
+            matchData = {
+              id: match._id,
+              users: match.users,
+              matchedAt: match.matchedAt,
+            };
+          } else {
+            console.error("❌ Could not create or find match");
+          }
+        } catch (matchError) {
+          console.error("❌ Match creation error:", matchError);
+          // Don't fail the swipe if match creation fails
+        }
       }
     }
 
     res.status(200).json({
       success: true,
-      message: isMatch ? "It's a match!" : "Swipe recorded",
+      message: isMatch ? "It's a match! 🎉" : "Swipe recorded",
       data: {
         swipe: {
           id: swipe._id,
@@ -121,11 +166,11 @@ const swipe = async (req, res) => {
           swipedAt: swipe.swipedAt,
         },
         isMatch,
-        matchId,
+        match: matchData,
       },
     });
   } catch (error) {
-    console.error("Swipe error:", error);
+    console.error("❌ Swipe error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to swipe",

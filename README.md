@@ -4,35 +4,6 @@
 npm run dev
 ```
 
-### ✅ PHASE 4: DISCOVERY (Swipe)
-
-```
-17. src/models/Swipe.js                    # Swipe history schema
-18. src/services/matching.service.js       # Filter profiles by location/age
-19. src/controllers/discovery.controller.js # Get profiles, swipe left/right
-20. src/routes/discovery.routes.js         # Discovery endpoints
-21. Test: GET /api/discovery/profiles, POST /api/discovery/swipe
-```
-
-### ✅ PHASE 5: MATCHES
-
-```
-22. src/models/Match.js                    # Match schema
-23. src/controllers/match.controller.js    # Get matches, unmatch
-24. src/routes/match.routes.js             # Match endpoints
-25. Test: GET /api/matches
-```
-
-### ✅ PHASE 6: CHAT (Real-time)
-
-```
-26. src/models/Message.js                  # Message schema
-27. src/controllers/chat.controller.js     # Get conversations, messages
-28. src/routes/chat.routes.js              # Chat endpoints
-29. src/socket/index.js                    # Socket.IO for real-time
-30. Test: GET /api/chats, Socket.IO connection
-```
-
 ### ✅ PHASE 7: NOTIFICATIONS (Optional)
 
 ```
