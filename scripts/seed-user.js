@@ -523,12 +523,19 @@ async function seedUsers() {
 
       // STEP 2: Update profile
       log("yellow", "  ✏️  Updating profile...");
-      await axios.put(`${API_URL}/users/me`, user.profile, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      await axios.put(
+        `${API_URL}/users/me`,
+        {
+          ...user.profile,
+          pronouns: user.pronouns,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       results.updated++;
       log("green", "  ✅ Profile updated successfully");
