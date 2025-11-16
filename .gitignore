@@ -17,3 +17,6 @@ coverage/
 # Editor folders
 .vscode/
 .idea/
+
+# Images seed-user files
+img/
