@@ -5,6 +5,8 @@ const {
   swipe,
   getLikes,
   getSwipeHistory,
+  getLikeSwiped,
+  filterProfiles,
 } = require("../controllers/discovery.controller");
 const { protect } = require("../middleware/auth.middleware");
 
@@ -20,7 +22,13 @@ router.post("/swipe", swipe);
 // Get users who liked me
 router.get("/likes", getLikes);
 
+// Get users I have liked (profiles)
+router.get("/getLikeSwiped", getLikeSwiped);
+
 // Get my swipe history
 router.get("/swipe-history", getSwipeHistory);
+
+// Filter profiles with custom parameters
+router.get("/filter", filterProfiles);
 
 module.exports = router;

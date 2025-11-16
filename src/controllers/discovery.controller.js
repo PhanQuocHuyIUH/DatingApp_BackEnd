@@ -291,9 +291,195 @@ const getSwipeHistory = async (req, res) => {
   }
 };
 
+/**
+ * @route   GET /api/discovery/getLikeSwiped
+ * @desc    Get profiles of users I have liked (including superlikes)
+ * @access  Private
+ */
+const getLikeSwiped = async (req, res) => {
+  try {
+    // Pagination
+    const limit = parseInt(req.query.limit) || 50;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    // Find swipes performed by current user where action is like or superlike
+    const actions = ["like", "superlike"];
+
+    const swipes = await Swipe.find({
+      userId: req.user._id,
+      action: { $in: actions },
+    })
+      .populate(
+        "targetUserId",
+        "name age gender photos bio occupation location pushToken notificationSettings"
+      )
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Map to user profiles (populate gives us the user document under targetUserId)
+    const profiles = swipes.map((s) => s.targetUserId).filter(Boolean);
+
+    res.status(200).json({
+      success: true,
+      count: profiles.length,
+      page,
+      limit,
+      data: { profiles },
+    });
+  } catch (error) {
+    console.error("Get liked/swiped profiles error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get liked profiles",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   GET /api/discovery/filter
+ * @desc    Filter profiles with custom parameters
+ * @access  Private
+ * @query   {
+ *   ageMin: number,
+ *   ageMax: number,
+ *   gender: string (male|female|nonbinary),
+ *   city: string,
+ *   state: string,
+ *   country: string,
+ *   interests: string (comma-separated),
+ *   languages: string (comma-separated),
+ *   keyword: string (search in name/bio),
+ *   limit: number (default 20),
+ *   page: number (default 1)
+ * }
+ */
+const filterProfiles = async (req, res) => {
+  try {
+    const {
+      ageMin,
+      ageMax,
+      gender,
+      city,
+      state,
+      country,
+      interests,
+      languages,
+      keyword,
+      limit = 20,
+      page = 1,
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build query filter
+    const query = {};
+
+    // Age range filter
+    if (ageMin || ageMax) {
+      query.dateOfBirth = {};
+
+      if (ageMax) {
+        // ageMax means born after: today - ageMax years
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() - parseInt(ageMax));
+        query.dateOfBirth.$gte = maxDate;
+      }
+
+      if (ageMin) {
+        // ageMin means born before: today - ageMin years
+        const minDate = new Date();
+        minDate.setFullYear(minDate.getFullYear() - parseInt(ageMin));
+        query.dateOfBirth.$lte = minDate;
+      }
+    }
+
+    // Gender filter
+    if (gender) {
+      query.gender = gender;
+    }
+
+    // Location filter
+    if (city) {
+      query["location.city"] = new RegExp(city, "i");
+    }
+    if (state) {
+      query["location.state"] = new RegExp(state, "i");
+    }
+    if (country) {
+      query["location.country"] = new RegExp(country, "i");
+    }
+
+    // Interests filter (match any)
+    if (interests) {
+      const interestList = interests.split(",").map((i) => i.trim());
+      query.interests = { $in: interestList };
+    }
+
+    // Languages filter (match any)
+    if (languages) {
+      const languageList = languages.split(",").map((l) => l.trim());
+      query.languages = { $in: languageList };
+    }
+
+    // Keyword filter (search in name or bio)
+    if (keyword) {
+      query.$or = [
+        { name: new RegExp(keyword, "i") },
+        { bio: new RegExp(keyword, "i") },
+      ];
+    }
+
+    // Exclude current user and already swiped users
+    query._id = { $ne: req.user._id };
+
+    // Get already swiped user IDs
+    const swipedUsers = await Swipe.find({ userId: req.user._id }).select(
+      "targetUserId"
+    );
+    const swipedUserIds = swipedUsers.map((s) => s.targetUserId.toString());
+    query._id.$nin = swipedUserIds;
+
+    // Execute query with pagination
+    const profiles = await User.find(query)
+      .select(
+        "name age gender photos bio occupation education company interests languages location lastActive isOnline"
+      )
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get total count for pagination info
+    const total = await User.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: profiles.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      limit: parseInt(limit),
+      data: {
+        profiles,
+      },
+    });
+  } catch (error) {
+    console.error("Filter profiles error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to filter profiles",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProfiles,
   swipe,
   getLikes,
   getSwipeHistory,
+  getLikeSwiped,
+  filterProfiles,
 };
