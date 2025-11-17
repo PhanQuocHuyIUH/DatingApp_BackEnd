@@ -48,12 +48,28 @@ const matchSchema = new mongoose.Schema(
   }
 );
 
-// ✅ CORRECT INDEX: Compound index on both elements
-matchSchema.index({ users: 1 }, { unique: true });
-
-// Index for queries
+// ✅ Index for queries (NO unique constraint on users array)
+// This allows each user to have multiple matches
+matchSchema.index({ users: 1 });
 matchSchema.index({ status: 1 });
 matchSchema.index({ matchedAt: -1 });
+
+// Custom validation to prevent duplicate matches (same pair)
+matchSchema.pre("save", async function (next) {
+  if (this.isNew) {
+    const existingMatch = await this.constructor.findOne({
+      users: { $all: this.users },
+      _id: { $ne: this._id },
+    });
+
+    if (existingMatch) {
+      const error = new Error("Match already exists between these users");
+      error.code = 11000; // Mimic duplicate key error
+      return next(error);
+    }
+  }
+  next();
+});
 
 // Method: Check if user is part of this match
 matchSchema.methods.includesUser = function (userId) {

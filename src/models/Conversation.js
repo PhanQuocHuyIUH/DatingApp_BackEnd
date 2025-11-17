@@ -40,9 +40,35 @@ const conversationSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index: participants pair
-conversationSchema.index({ participants: 1 }, { unique: true });
+// Index for faster queries (non-unique)
+conversationSchema.index({ participants: 1 });
 conversationSchema.index({ matchId: 1 });
+
+// Pre-save validation: Ensure unique participant pair
+conversationSchema.pre("save", async function (next) {
+  if (!this.isNew) {
+    return next();
+  }
+
+  // Sort participants to ensure consistent comparison
+  const sortedParticipants = [...this.participants].sort((a, b) => {
+    return a.toString().localeCompare(b.toString());
+  });
+
+  // Check if conversation already exists for this pair
+  const existing = await this.constructor.findOne({
+    participants: { $all: sortedParticipants },
+    _id: { $ne: this._id },
+  });
+
+  if (existing) {
+    const error = new Error("Conversation already exists for these users");
+    error.code = 11000; // Mimic duplicate key error
+    return next(error);
+  }
+
+  next();
+});
 
 // Method: Get other participant
 conversationSchema.methods.getOtherParticipant = function (userId) {

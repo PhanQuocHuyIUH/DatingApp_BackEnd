@@ -150,6 +150,15 @@ const getMessages = async (req, res) => {
     const { conversationId } = req.params;
     const { limit = 50, before } = req.query; // Pagination
 
+    // Validate conversationId is a valid ObjectId
+    const mongoose = require("mongoose");
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid conversation ID format",
+      });
+    }
+
     // Check if conversation exists and user is participant
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
@@ -224,6 +233,15 @@ const sendMessage = async (req, res) => {
   try {
     const { matchId } = req.params;
     const { text, type = "text", mediaUrl } = req.body;
+
+    // Validate matchId is a valid ObjectId
+    const mongoose = require("mongoose");
+    if (!mongoose.Types.ObjectId.isValid(matchId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid match ID format",
+      });
+    }
 
     // Validation
     if (type === "text" && !text) {
