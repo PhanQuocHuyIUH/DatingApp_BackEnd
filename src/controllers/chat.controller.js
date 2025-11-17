@@ -369,10 +369,21 @@ const sendMessage = async (req, res) => {
     // Emit socket event
     const io = req.app.get("io");
     if (io) {
+      // Emit to conversation room (for users already in chat)
+      io.to(conversation._id.toString()).emit("new_message", {
+        conversationId: conversation._id,
+        message,
+      });
+
+      // Also emit to receiver's personal room (ensures delivery even if not in conversation room)
       io.to(receiverId.toString()).emit("new_message", {
         conversationId: conversation._id,
         message,
       });
+
+      console.log(
+        `📤 Message sent: ${message._id} from ${req.user._id} to ${receiverId}`
+      );
     }
 
     res.status(201).json({
