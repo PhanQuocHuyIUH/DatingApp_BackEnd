@@ -1,5 +1,6 @@
 const Match = require("../models/Match");
 const User = require("../models/User");
+const Conversation = require("../models/Conversation");
 
 /**
  * @route   GET /api/matches
@@ -226,9 +227,80 @@ const calculateAge = (dateOfBirth) => {
   return age;
 };
 
+/**
+ * @route   POST /api/matches/:matchId/conversation
+ * @desc    Create conversation for a match
+ * @access  Private
+ */
+const createMatchConversation = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+
+    // Check if match exists and user is part of it
+    const match = await Match.findById(matchId);
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        message: "Match not found",
+      });
+    }
+
+    if (!match.includesUser(req.user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not part of this match",
+      });
+    }
+
+    if (match.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot create conversation for inactive match",
+      });
+    }
+
+    // Get the other user
+    const otherUserId = match.getOtherUser(req.user._id);
+
+    // Create or find conversation
+    const conversation = await Conversation.findOrCreate(
+      req.user._id,
+      otherUserId,
+      matchId
+    );
+
+    // Populate participants
+    await conversation.populate(
+      "participants",
+      "name age gender photos bio lastActive isOnline"
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Conversation created successfully",
+      data: {
+        conversation: {
+          id: conversation._id,
+          matchId: conversation.matchId,
+          participants: conversation.participants,
+          createdAt: conversation.createdAt,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Create match conversation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create conversation",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getMatches,
   getMatchById,
   unmatch,
   checkMatchWithUser,
+  createMatchConversation,
 };

@@ -5,6 +5,7 @@ const {
   getMatchById,
   unmatch,
   checkMatchWithUser,
+  createMatchConversation,
 } = require("../controllers/match.controller");
 const { protect } = require("../middleware/auth.middleware");
 
@@ -14,13 +15,16 @@ router.use(protect);
 // Get all matches
 router.get("/", getMatches);
 
+// Check if matched with user (must come before /:matchId)
+router.get("/check/:userId", checkMatchWithUser);
+
 // Get single match
 router.get("/:matchId", getMatchById);
 
+// Create conversation for match
+router.post("/:matchId/conversation", createMatchConversation);
+
 // Unmatch
 router.delete("/:matchId", unmatch);
-
-// Check if matched with user
-router.get("/check/:userId", checkMatchWithUser);
 
 module.exports = router;

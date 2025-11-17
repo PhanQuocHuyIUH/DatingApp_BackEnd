@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const {
+  createConversation,
   getConversations,
   getMessages,
   sendMessage,
@@ -10,6 +11,9 @@ const { protect } = require("../middleware/auth.middleware");
 
 // All routes are protected
 router.use(protect);
+
+// Create conversation for a match
+router.post("/conversation", createConversation);
 
 // Get all conversations
 router.get("/", getConversations);

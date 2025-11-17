@@ -5,6 +5,83 @@ const User = require("../models/User");
 const { sendMessageNotification } = require("../services/notification.service");
 
 /**
+ * @route   POST /api/chats/conversation
+ * @desc    Create conversation for a match (only if matched)
+ * @access  Private
+ */
+const createConversation = async (req, res) => {
+  try {
+    const { matchId } = req.body;
+
+    if (!matchId) {
+      return res.status(400).json({
+        success: false,
+        message: "matchId is required",
+      });
+    }
+
+    // Check if match exists and user is part of it
+    const match = await Match.findById(matchId);
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        message: "Match not found",
+      });
+    }
+
+    if (!match.includesUser(req.user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not part of this match",
+      });
+    }
+
+    if (match.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot create conversation for inactive match",
+      });
+    }
+
+    // Get the other user
+    const otherUserId = match.getOtherUser(req.user._id);
+
+    // Create or find conversation
+    const conversation = await Conversation.findOrCreate(
+      req.user._id,
+      otherUserId,
+      matchId
+    );
+
+    // Populate participants
+    await conversation.populate(
+      "participants",
+      "name age gender photos bio lastActive isOnline"
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Conversation created successfully",
+      data: {
+        conversation: {
+          id: conversation._id,
+          matchId: conversation.matchId,
+          participants: conversation.participants,
+          createdAt: conversation.createdAt,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Create conversation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create conversation",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @route   GET /api/chats
  * @desc    Get all conversations for current user
  * @access  Private
@@ -143,11 +220,6 @@ const getMessages = async (req, res) => {
  * @desc    Send a message
  * @access  Private
  */
-/**
- * @route   POST /api/chats/:matchId/messages
- * @desc    Send a message
- * @access  Private
- */
 const sendMessage = async (req, res) => {
   try {
     const { matchId } = req.params;
@@ -194,12 +266,20 @@ const sendMessage = async (req, res) => {
     // Get receiver
     const receiverId = match.getOtherUser(req.user._id);
 
-    // Find or create conversation
-    const conversation = await Conversation.findOrCreate(
-      req.user._id,
-      receiverId,
-      matchId
-    );
+    // ✅ CONVERSATION SHOULD ALREADY EXIST (created when matched)
+    let conversation = await Conversation.findOne({
+      participants: { $all: [req.user._id, receiverId] },
+    });
+
+    // Fallback: If conversation doesn't exist (legacy matches), create it
+    if (!conversation) {
+      console.warn("⚠️ Conversation not found, creating now (legacy match)");
+      conversation = await Conversation.findOrCreate(
+        req.user._id,
+        receiverId,
+        matchId
+      );
+    }
 
     // Create message
     const message = await Message.create({
@@ -232,13 +312,18 @@ const sendMessage = async (req, res) => {
       const receiver = await User.findById(receiverId);
 
       // Check if receiver has push token and notifications enabled
-      if (receiver && receiver.pushToken && receiver.notificationSettings?.messages) {
-        console.log('📲 Sending push notification to:', receiver.name);
-        
+      if (
+        receiver &&
+        receiver.pushToken &&
+        receiver.notificationSettings?.messages
+      ) {
+        console.log("📲 Sending push notification to:", receiver.name);
+
         // Prepare notification message
-        const notificationBody = type === "text" 
-          ? text.substring(0, 100) // Truncate long messages
-          : `Sent you ${type === 'image' ? 'an' : 'a'} ${type}`;
+        const notificationBody =
+          type === "text"
+            ? text.substring(0, 100) // Truncate long messages
+            : `Sent you ${type === "image" ? "an" : "a"} ${type}`;
 
         // Send notification
         await sendMessageNotification(
@@ -246,21 +331,21 @@ const sendMessage = async (req, res) => {
           {
             id: req.user._id,
             name: req.user.name,
-            conversationId: conversation._id
+            conversationId: conversation._id,
           },
           notificationBody
         );
 
-        console.log('✅ Push notification sent successfully');
+        console.log("✅ Push notification sent successfully");
       } else {
-        console.log('⚠️ No push notification sent:', {
+        console.log("⚠️ No push notification sent:", {
           hasPushToken: !!receiver?.pushToken,
-          notificationsEnabled: receiver?.notificationSettings?.messages
+          notificationsEnabled: receiver?.notificationSettings?.messages,
         });
       }
     } catch (notifError) {
       // Don't fail message sending if notification fails
-      console.error('❌ Push notification error:', notifError.message);
+      console.error("❌ Push notification error:", notifError.message);
     }
 
     // Emit socket event
@@ -350,6 +435,7 @@ const calculateAge = (dateOfBirth) => {
 };
 
 module.exports = {
+  createConversation,
   getConversations,
   getMessages,
   sendMessage,
