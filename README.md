@@ -59,7 +59,7 @@ HOST=0.0.0.0
 NODE_ENV=development
 
 # Database
-MONGO_URI=mongodb://localhost:27017/datingapp
+MONGO_URI=your_mongodb_uri_here
 
 # JWT Secret
 JWT_SECRET=your_super_secret_jwt_key_here
@@ -193,7 +193,6 @@ The application uses optimized indexes for performance:
 ### File Upload Limits
 
 - Maximum file size: 5MB
-- Supported formats: JPEG, PNG, GIF
 - Maximum photos per user: 6
 
 ## 🐛 Common Issues & Solution
