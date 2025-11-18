@@ -20,3 +20,7 @@ coverage/
 
 # Images seed-user files
 img/
+
+# Data users
+scripts/user-tokens.json
+scripts/match-info.json
