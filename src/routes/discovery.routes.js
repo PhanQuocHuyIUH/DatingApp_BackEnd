@@ -6,6 +6,7 @@ const {
   getLikes,
   getSwipeHistory,
   getLikeSwiped,
+  getSuperLiked,
   filterProfiles,
 } = require("../controllers/discovery.controller");
 const { protect } = require("../middleware/auth.middleware");
@@ -24,6 +25,9 @@ router.get("/likes", getLikes);
 
 // Get users I have liked (profiles)
 router.get("/getLikeSwiped", getLikeSwiped);
+
+// Get users I have superliked only
+router.get("/getSuperLiked", getSuperLiked);
 
 // Get my swipe history
 router.get("/swipe-history", getSwipeHistory);

@@ -39,6 +39,25 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// File filter for chat media (images and audio)
+const chatMediaFilter = (req, file, cb) => {
+  // Allowed extensions for images and audio
+  const allowedTypes = /jpeg|jpg|png|gif|webp|mp3|wav|m4a|aac|ogg/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+
+  // Check mimetype
+  const isImage = file.mimetype.startsWith("image/");
+  const isAudio = file.mimetype.startsWith("audio/");
+
+  if ((isImage || isAudio) && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error("Only image and audio files are allowed"));
+  }
+};
+
 // Multer config
 const upload = multer({
   storage: storage,
@@ -46,6 +65,15 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB max
   },
   fileFilter: fileFilter,
+});
+
+// Multer config for chat media (images and audio)
+const uploadChatMedia = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max for media messages
+  },
+  fileFilter: chatMediaFilter,
 });
 
 // Middleware để xóa file temp sau khi upload
@@ -57,5 +85,6 @@ const cleanupTempFile = (filePath) => {
 
 module.exports = {
   upload,
+  uploadChatMedia,
   cleanupTempFile,
 };

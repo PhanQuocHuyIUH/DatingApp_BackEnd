@@ -226,13 +226,17 @@ const getMessages = async (req, res) => {
 
 /**
  * @route   POST /api/chats/:matchId/messages
- * @desc    Send a message
+ * @desc    Send a message (with optional media upload)
  * @access  Private
  */
 const sendMessage = async (req, res) => {
+  const fs = require("fs");
+  const { uploadImage } = require("../config/cloudinary");
+
   try {
     const { matchId } = req.params;
-    const { text, type = "text", mediaUrl } = req.body;
+    const { text, type = "text" } = req.body;
+    let mediaUrl = null;
 
     // Validate matchId is a valid ObjectId
     const mongoose = require("mongoose");
@@ -241,6 +245,43 @@ const sendMessage = async (req, res) => {
         success: false,
         message: "Invalid match ID format",
       });
+    }
+
+    // Handle file upload if present
+    if (req.file) {
+      try {
+        // Determine folder based on file type
+        const isImage = req.file.mimetype.startsWith("image/");
+        const isAudio = req.file.mimetype.startsWith("audio/");
+
+        let folder = "chilldate/chat";
+        let resourceType = "auto";
+
+        if (isImage) {
+          folder = "chilldate/chat/images";
+        } else if (isAudio) {
+          folder = "chilldate/chat/audio";
+          resourceType = "video"; // Cloudinary uses 'video' for audio files
+        }
+
+        // Upload to Cloudinary
+        const uploadResult = await uploadImage(req.file.path, folder);
+        mediaUrl = uploadResult.url;
+
+        // Clean up temp file
+        fs.unlinkSync(req.file.path);
+      } catch (uploadError) {
+        // Clean up temp file on error
+        if (req.file && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload media",
+          error: uploadError.message,
+        });
+      }
     }
 
     // Validation
@@ -254,7 +295,7 @@ const sendMessage = async (req, res) => {
     if (["image", "gif", "audio"].includes(type) && !mediaUrl) {
       return res.status(400).json({
         success: false,
-        message: "Media URL is required",
+        message: "Media file is required for media messages",
       });
     }
 

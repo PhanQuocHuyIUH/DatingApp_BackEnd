@@ -8,6 +8,7 @@ const {
   deleteMessage,
 } = require("../controllers/chat.controller");
 const { protect } = require("../middleware/auth.middleware");
+const { uploadChatMedia } = require("../middleware/upload.middleware");
 
 // All routes are protected
 router.use(protect);
@@ -24,7 +25,7 @@ router.delete("/messages/:messageId", deleteMessage);
 // Get messages in a conversation
 router.get("/:conversationId/messages", getMessages);
 
-// Send message (by matchId)
-router.post("/:matchId/messages", sendMessage);
+// Send message (by matchId) - with optional media upload
+router.post("/:matchId/messages", uploadChatMedia.single("media"), sendMessage);
 
 module.exports = router;

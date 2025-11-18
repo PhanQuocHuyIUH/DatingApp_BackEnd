@@ -15,15 +15,24 @@ cloudinary.config({
  */
 const uploadImage = async (filePath, folder = "chilldate/profiles") => {
   try {
-    const result = await cloudinary.uploader.upload(filePath, {
+    // Check if it's an audio file based on folder path
+    const isAudio = folder.includes("/audio");
+
+    const uploadOptions = {
       folder: folder,
-      resource_type: "auto",
-      transformation: [
+      resource_type: isAudio ? "video" : "auto", // Cloudinary uses 'video' for audio
+    };
+
+    // Add transformations only for images
+    if (!isAudio) {
+      uploadOptions.transformation = [
         { width: 800, height: 800, crop: "limit" }, // Max 800x800
         { quality: "auto" }, // Auto quality
         { fetch_format: "auto" }, // Auto format (webp nếu browser support)
-      ],
-    });
+      ];
+    }
+
+    const result = await cloudinary.uploader.upload(filePath, uploadOptions);
 
     return {
       url: result.secure_url,
@@ -31,7 +40,7 @@ const uploadImage = async (filePath, folder = "chilldate/profiles") => {
     };
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    throw new Error("Failed to upload image");
+    throw new Error("Failed to upload media");
   }
 };
 

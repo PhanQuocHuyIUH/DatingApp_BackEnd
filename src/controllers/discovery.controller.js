@@ -344,6 +344,60 @@ const getLikeSwiped = async (req, res) => {
 };
 
 /**
+ * @route   GET /api/discovery/getSuperLiked
+ * @desc    Get profiles of users I have superliked only
+ * @access  Private
+ */
+const getSuperLiked = async (req, res) => {
+  try {
+    // Pagination
+    const limit = parseInt(req.query.limit) || 50;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    // Find swipes performed by current user where action is superlike only
+    const swipes = await Swipe.find({
+      userId: req.user._id,
+      action: "superlike",
+    })
+      .populate(
+        "targetUserId",
+        "name age gender photos bio occupation location pushToken notificationSettings isOnline lastActive"
+      )
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Map to user profiles with superlike info
+    const profiles = swipes
+      .map((s) => {
+        if (!s.targetUserId) return null;
+        return {
+          ...s.targetUserId.toObject(),
+          superLikedAt: s.createdAt,
+          isSuperLiked: true,
+        };
+      })
+      .filter(Boolean);
+
+    res.status(200).json({
+      success: true,
+      count: profiles.length,
+      page,
+      limit,
+      data: { profiles },
+    });
+  } catch (error) {
+    console.error("Get superliked profiles error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get superliked profiles",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @route   GET /api/discovery/filter
  * @desc    Filter profiles with custom parameters
  * @access  Private
@@ -486,5 +540,6 @@ module.exports = {
   getLikes,
   getSwipeHistory,
   getLikeSwiped,
+  getSuperLiked,
   filterProfiles,
 };
