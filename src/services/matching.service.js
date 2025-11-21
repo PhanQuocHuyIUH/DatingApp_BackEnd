@@ -617,10 +617,26 @@ const getUsersWhoLikedMe = async (userId) => {
       targetUserId: userId,
       action: { $in: ["like", "superlike"] },
     })
-      .populate("userId", "name age gender photos bio occupation location")
+      .populate(
+        "userId",
+        "name dateOfBirth gender photos bio occupation location isOnline lastActive"
+      )
       .sort({ createdAt: -1 });
 
-    return swipes.map((swipe) => swipe.userId);
+    // Map swipes to user profiles with age calculated
+    const profiles = swipes
+      .map((swipe) => {
+        if (!swipe.userId) return null;
+        const user = swipe.userId.toObject
+          ? swipe.userId.toObject()
+          : swipe.userId;
+        user.age = calculateAge(user.dateOfBirth);
+        user.likedAt = swipe.createdAt;
+        return user;
+      })
+      .filter(Boolean);
+
+    return profiles;
   } catch (error) {
     console.error("Get users who liked me error:", error);
     throw error;

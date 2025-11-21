@@ -45,6 +45,9 @@ app.use("/api/matches", require("./routes/match.routes"));
 // Chat routes
 app.use("/api/chats", require("./routes/chat.routes"));
 
+// AI routes
+app.use("/api/ai", require("./routes/ai.routes"));
+
 // Error handler middleware (optional)
 app.use((err, req, res, next) => {
   console.error(err.stack);
